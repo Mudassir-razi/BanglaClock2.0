@@ -1,0 +1,54 @@
+html {
+    font-family: Helvetica;
+    display: inline-block;
+    margin: 0px auto;
+    text-align: center;
+    background-color: #e2dfef;
+  }
+
+  h1 {
+    text-align: center;
+    color: #d94a4f
+  }
+
+  #clock {
+    text-align: center;
+    color: white;
+    border: none;
+    font-size: 100px;
+  }
+
+  
+
+  #date {
+    text-align: center;
+    font-size: 24px;
+
+  }
+
+  #weather {
+    text-align: center;
+    font-size: 24px;
+  }
+
+  p {
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  input[type="number"] {
+    width: 50px;
+  }
+
+  #updateButton {
+    padding: 10px 20px;
+    background-color: #008CBA;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+
+  #updateButton:hover {
+    background-color: #005A80;
+  }
+  
