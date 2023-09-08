@@ -179,3 +179,13 @@ int TimeKeeper::getMin() {
   }
   return timeinfo.tm_min;
 }
+
+int TimeKeeper::getSec() {
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) {
+    Serial.println("Failed to obtain Sec");
+    return -1;
+  }
+  return timeinfo.tm_sec;
+}

@@ -4,9 +4,13 @@
 //bitluni
 
 #include "ESP32Lib.h"
+#include <Arduino.h>
+#include <ArduinoJson.h>
 #include <Ressources/Font6x8.h>
 #include <Ressources/CustomBangla.h>
-//#include <string.h>
+#include <ESPAsyncWebServer.h>
+#include <AsyncTCP.h>
+#include "SPIFFS.h"
 #include <WiFi.h>
 #include "TimeKeeper.h"
 #include <time.h>
@@ -17,8 +21,9 @@ struct weatherInfo {
   double feel;
 };
 
-const char* ssid = "Janina";
-const char* password = "nijerdatakin";
+//wifi stuff
+//const char* ssid = "Janina";
+//const char* password = "nijerdatakin";
 
 //pin configuration
 const int redPin = 14;
@@ -30,6 +35,7 @@ const int vsyncPin = 33;
 //VGA Device
 VGA3Bit vga;
 
+//.............................................................................
 //timer
 TimeKeeper time_keeper;
 struct tm dateTime;
@@ -40,6 +46,7 @@ int screenLastUpdated;
 int deltaTime;
 bool feelEn;
 
+//print characters
 char clock_[5];
 char date_[30];
 char temp_[15];
@@ -60,13 +67,15 @@ void strcpy(char *dest, char *source)
 void VGA_Setup() {
   //initializing vga at the specified pins
   vga.init(vga.MODE400x300, redPin, greenPin, bluePin, hsyncPin, vsyncPin);
-  vga.setTextColor(vga.RGB(255, 255, 255), vga.RGB(0, 0, 0));
+  vga.setTextColor(vga.RGB(0, 255, 255), vga.RGB(0, 0, 0));
   //vga.setFont(Font6x8);
   vga.setCustomFont(customBangla);
 }
 
+//updates time through http
 void updateTimeOnline() {
 
+  /*
   Serial.printf("Connecting to %s ", ssid);
   infoLastUpdated = 0;
   WiFi.begin(ssid, password);
@@ -74,6 +83,7 @@ void updateTimeOnline() {
     Serial.print('.');
     delay(100);
   }
+  */
 
   if (WiFi.status() != WL_CONNECTED) Serial.println("Connection time out");
   else Serial.println("Connected");
@@ -93,6 +103,8 @@ void updateTimeOnline() {
   //WiFi.disconnect();
 }
 
+
+//updats time using local RTS
 void updateTimeOffline() {
 
   if(dateTime.tm_min != time_keeper.getMin())
@@ -105,6 +117,7 @@ void updateTimeOffline() {
   dateTime.tm_min = time_keeper.getMin();
 }
 
+//translates & formats time and weather info for sending to VGA
 void formatTime()
 {
   if(timeMode == 1)
@@ -123,7 +136,7 @@ void formatTime()
 
   //update date
   char monName[8];
-  switch(dateTime.tm_mon)
+  switch(dateTime.tm_mon + 1)
   {
     case 1:
       strcpy(monName, "iQY");
@@ -205,6 +218,9 @@ void formatTime()
 
 void setup() {
   Serial.begin(115200);
+
+  setupServer();
+
   delay(1000);
   deltaTime = 0;
   screenLastUpdated = 0;
