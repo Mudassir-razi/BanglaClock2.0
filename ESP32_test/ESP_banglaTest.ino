@@ -90,10 +90,17 @@ void updateTimeOnline() {
   wi.hum = time_keeper.getHumidity();
   wi.feel = time_keeper.getFeelslike();
   delay(3000);
-  WiFi.disconnect();
+  //WiFi.disconnect();
 }
 
 void updateTimeOffline() {
+
+  if(dateTime.tm_min != time_keeper.getMin())
+  {
+    dateTime.tm_min = time_keeper.getMin();
+    vga.clear();
+  }
+
   dateTime.tm_hour = time_keeper.getHour();
   dateTime.tm_min = time_keeper.getMin();
 }
@@ -106,7 +113,13 @@ void formatTime()
     dateTime.tm_hour = !dateTime.tm_hour ? 12 : dateTime.tm_hour;
   }
 
-  sprintf(clock_, "%d { %d", dateTime.tm_hour, dateTime.tm_min);
+  char hr[4];
+  char min[4];
+  if(dateTime.tm_hour >= 0 && dateTime.tm_hour < 10)sprintf(hr, "0%d", dateTime.tm_hour);
+  else sprintf(hr, "%d", dateTime.tm_hour);
+  if(dateTime.tm_min >= 0 && dateTime.tm_min < 10)sprintf(min, "0%d", dateTime.tm_min);
+  else sprintf(min, "%d", dateTime.tm_min);
+  sprintf(clock_, "%s { %s", hr, min);
 
   //update date
   char monName[8];
@@ -180,13 +193,13 @@ void formatTime()
 
 
   //temperature
-  sprintf(temp_, "tpMa{ %.1d}", wi.temp-273);
+  sprintf(temp_, "tpMa{ %.0lf}", wi.temp-273);
 
   //humidity
-  sprintf(hum_, "Ayt{ %.2d %", wi.hum);
+  sprintf(hum_, "Ayt{ %.0lf%%", wi.hum);
 
   //feels like:
-  sprintf(feel_, "oZ!T{ %.1d}", wi.feel - 273);
+  sprintf(feel_, "oZ!T{ %.0lf}", wi.feel - 273);
 
 }
 
@@ -215,15 +228,14 @@ void loop() {
   {
     vga.clear();
     screenLastUpdated = 0;
-    feelEn != feelEn;
   }
 
   formatTime();
-  //Serial.println(time_keeper.getHour());
+  //Serial.println(time_keeper.getHumidity());
 
   //Time part
   vga.textScale = 3;
-  vga.cursorX = vga.cursorBaseX + 80;
+  vga.cursorX = vga.cursorBaseX + 40;
   vga.cursorY = 0;
   vga.printlnCustom(clock_);
 
@@ -249,7 +261,8 @@ void loop() {
   vga.cursorX = vga.cursorBaseX + 200;
   vga.cursorY = 240;
   vga.textScale = 1;
-  vga.printlnCustom(feelEn? hum_ : feel_);
+  vga.printlnCustom(hum_);
+
 
   //update delta time
   deltaTime = millis() - initTime;
