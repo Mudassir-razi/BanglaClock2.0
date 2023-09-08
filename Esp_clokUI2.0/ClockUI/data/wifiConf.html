@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Wi-Fi Configuration</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" type="text/css" href="style1.css">
+</head>
+
+<body>
+    <h1>Wi-Fi Configuration</h1>
+    <div id="wifiForm">
+        <p>
+            SSID:
+            <input type="text" id="ssid" name="ssid" placeholder="Enter SSID" required>
+        </p>
+        <p>
+            Password:
+            <input type="password" id="password" name="password" placeholder="Enter Password" required>
+        </p>
+        <p>
+            <button class="button" id="connecteButton" onclick="sendData()">Connect</button>
+
+        </p>
+    </div>
+    <div id="result" style="display:none;">
+        <p><strong>ESP32 is now connected to Wi-Fi!</strong></p>
+        <p>ESP32 IP Address: <span id="ipAddress"></span></p>
+        <p><a href="index.html">Go to Home Page</a></p>
+    </div>
+    <script>
+
+
+        function sendData() {
+            let ssid = document.getElementById('ssid').value.trim();
+            let password = document.getElementById('password').value.trim();
+            let data = { ssid, password };
+            console.log("Json data: ", JSON.stringify(data));
+            // Send Wi-Fi credentials to ESP32 and get IP address
+            fetch('/config_wifi', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+                
+
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const ipAddress = data.ipAddress;
+                    document.getElementById('result').style.display = 'block';
+                    document.getElementById('ipAddress').textContent = ipAddress;
+                })
+                .catch(error => {
+                    console.error('Error configuring Wi-Fi:', error);
+                    alert('Error configuring Wi-Fi. Please try again.');
+                });
+        };
+    </script>
+</body>
+
+</html>
