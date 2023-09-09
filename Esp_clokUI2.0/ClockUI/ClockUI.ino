@@ -11,6 +11,7 @@ const char* PARAM_INPUT_1 = "ssid";
 const char* PARAM_INPUT_2 = "pass";
 //const char* PARAM_INPUT_3 = "ip";
 //const char* PARAM_INPUT_4 = "gateway";
+bool updateMode = false;
 
 //Variables to save values from HTML form
 String ssid;
@@ -134,7 +135,7 @@ void setup() {
 
     Server.on("/get-data", HTTP_GET, [](AsyncWebServerRequest * request) {
       TimeKeeper time;
-      Serial.println("Received Ntp data:");
+      /*Serial.println("Received Ntp data:");
       Serial.println("Hour: " + String(time.getHour()));
       Serial.println("Minute: " + String(time.getMin()));
       Serial.println("Second: " + String(time.getSec()));
@@ -143,7 +144,7 @@ void setup() {
       Serial.println("Year: " + String(time.getYear()));
       Serial.println("Temperature: " + String(time.getTemp()));
       Serial.println("Humidity: " + String(time.getHumidity()));
-
+*/
       // Create a JSON response with the sensor data
       StaticJsonDocument<256> jsonResponse;
       jsonResponse["hour"] = time.getHour();
@@ -166,25 +167,26 @@ void setup() {
     Server.onRequestBody([](AsyncWebServerRequest * request, uint8_t* data, size_t len, size_t index, size_t total) {
       Serial.println("Running");
       if (request->url() == "/update-time") {
+        
         StaticJsonDocument<256> doc;
         DeserializationError error = deserializeJson(doc, (const char*)data);
 
         if (!error) {
+          updateMode = true;
           const char* hour = doc["hour"];
           const char* minute = doc["minute"];
-          const char* second = doc["second"];
+          const char* autoMode = doc["autoMode"];
           const char* day = doc["day"];
-          const char* month = doc["month"];
+          const char* month = doc["monthNumber"];
           const char* year = doc["year"];
-          const char* dayName = doc["dayName"];
+ 
           Serial.println("Received JSON data:");
           Serial.println("Hour: " + String(hour));
           Serial.println("Minute: " + String(minute));
-          Serial.println("Second: " + String(second));
+          Serial.println("autoMode: " + String(autoMode));
           Serial.println("Day: " + String(day));
           Serial.println("Month: " + String(month));
           Serial.println("Year: " + String(year));
-          Serial.println("DayName: " + String(dayName));
 
           // Use the received time values (hour, minute, second, day, month, year, dayName) to update your ESP32's clock
           // Implement your code here to handle time updates
@@ -277,7 +279,7 @@ void setup() {
         }
       }
       request->send(200, "text/plain", "end");
-      delay(3000);
+      delay(10000);
       ESP.restart();
     });
     Server.begin();

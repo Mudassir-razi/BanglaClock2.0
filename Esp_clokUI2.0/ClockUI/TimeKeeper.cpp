@@ -83,7 +83,7 @@ int TimeKeeper :: _conv() {
       else banglamonth = 8, bangladay = _day - 14;
     }
     //Serial.printf("%d %d\n", banglamonth, bangladay);
-    return _month * 100 + 1 + _day ;
+    return _month * 100  + _day ;
   }
 
 
@@ -131,7 +131,7 @@ double TimeKeeper::getFeelslike() {
 
 int TimeKeeper::getMonth() {
   int temp = _conv();
-  return temp / 100;
+  return temp / 100 +1;
 }
 
 int TimeKeeper::getDay() {

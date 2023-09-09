@@ -1,5 +1,5 @@
 html {
-  font-family: Helvetica;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
   display: inline-block;
   margin: 0px auto;
   text-align: center;
@@ -8,25 +8,52 @@ html {
 
 h1 {
   text-align: center;
-  color: #b7353a;
+  font-size: 40px;
+  color: #1f0dc4;
 }
 
+
+/* Style for the clock */
 #clock {
+  font-size: 130px;
   text-align: center;
-  color: white;
-  border: none;
-  font-size: 100px;
+  color: rgb(244, 239, 239);
+  padding: 10px;
+  margin-bottom: 20px;
+  font-family: Arial, sans-serif;
 }
 
-#date {
-  text-align: center;
-  font-size: 24px;
+/* Style for date, day name, temperature, and humidity containers */
+.first{
+  position: absolute;
+  left: 30%;
+  padding: 10px;
+
+}
+.second{
+  position: absolute;
+  left: 55%;
+  padding: 10px;
+
 }
 
-#weather {
-  text-align: center;
-  font-size: 24px;
+#date-temp{
+  font-size: 150%;
+  padding-bottom: none;
 }
+
+#dayName-humi{
+  font-size: 150%;
+  padding: none;
+  margin-bottom: 50px;
+}
+
+/* Style for spacing between elements */
+.space {
+  margin-left: 20px; /* Adjust the margin as needed for your desired spacing */
+}
+
+
 
 p {
   text-align: center;
@@ -37,14 +64,26 @@ input[type="number"] {
   width: 50px;
 }
 
-#updateButton {
-  padding: 10px 20px;
-  background-color: #008cba;
-  color: white;
-  border: none;
-  cursor: pointer;
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-#updateButton:hover {
-  background-color: #005a80;
+/* Style the button */
+.button {
+  padding: 10px 20px;
+  margin: 20px 30px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px;
+  text-align: center; /* Center text within the button */
+}
+
+/* Hover effect for the button */
+.button:hover {
+  background-color: #0056b3;
 }

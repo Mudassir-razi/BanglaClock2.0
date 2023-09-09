@@ -1,267 +1,229 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Bangla Clock 2.0</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" href="data:," />
-    <link rel="stylesheet" type="text/css" href="style.css" />
 
-    <script>
-      let day = "01"; // Initialize day with a default value
-      let month = "January"; // Initialize month with a default value
-      let year = "2023"; // Initialize year with a default value
-      let dayName = "Thursday"; // Initialize day name with a default value
-      let hour = "01"; // Initialize hour with a default value
-      let minute = "00"; // Initialize minute with a default value
-      let second = "00"; // Initialize second with a default value
-      let temperature = "25"; // Replace with actual temperature data
-      let humidity = "50"; // Replace with actual humidity data
-      let autoUpdateActive = true;
+<head>
+  <title>Bangla Clock 2.0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" type="text/css" href="style.css" />
 
-      function getMonthName(monthNumber) {
-        const date = new Date();
-        date.setMonth(monthNumber - 1);
+  <script>
+    let day = "01"; // Initialize day with a default value
+    let month = "January"; // Initialize month with a default value
+    let year = "2023"; // Initialize year with a default value
+    let dayName = "Thursday"; // Initialize day name with a default value
+    let hour = "01"; // Initialize hour with a default value
+    let minute = "00"; // Initialize minute with a default value
+    let second = "00"; // Initialize second with a default value
+    let temperature = "25"; // Replace with actual temperature data
+    let humidity = "50"; // Replace with actual humidity data
+    let autoMode = true;
+    let autoUpdateMode = 0;
 
-        return date.toLocaleString("en-US", { month: "long" });
-      }
-      function updateClock() {
-        // Replace this with code to fetch real-time data from ESP32
-        fetchDataFromESP32();
-        document.getElementById(
-          "clock"
-        ).innerHTML = `${hour}:${minute}:${second}`;
-        document.getElementById(
-          "date"
-        ).innerHTML = `${dayName}, ${day} ${month} ${year}`;
-        document.getElementById(
-          "weather"
-        ).innerHTML = `Temperature: ${temperature}C, Humidity: ${humidity}%`;
-      }
+    function getMonthName(monthNumber) {
+      const date = new Date();
+      date.setMonth(monthNumber - 1);
 
-      function fetchDataFromESP32() {
-        // Make an AJAX request to the ESP32 to fetch sensor data
-        fetch("/get-data") // Replace with the actual URL you use on your ESP32
-          .then((response) => response.json())
-          .then((data) => {
-            console.log("Received JSON data: " + JSON.stringify(data));
-            // Update the HTML elements with the received sensor data
-            day = data.day;
-            monthNumber = data.month;
-            month = getMonthName(monthNumber);
-            year = data.year;
-            hour = data.hour;
-            minute = data.minute;
-            second = data.second;
-            temperature = data.temperature;
-            humidity = data.humidity;
+      return date.toLocaleString("en-US", { month: "long" });
+    }
 
-            var days = [
-              "Sunday",
-              "Monday",
-              "Tuesday",
-              "Wednesday",
-              "Thursday",
-              "Friday",
-              "Saturday",
-            ];
-            var d = new Date(monthNumber + "/" + day + "/" + year);
-            var dayName = days[d.getDay()];
+    function getDayName(monthNumber, day, year) {
+      var days = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
+      var d = new Date(monthNumber + "/" + day + "/" + year);
+      return days[d.getDay()];
+    }
 
-            document.getElementById(
-              "clock"
-            ).innerHTML = `${hour}:${minute}:${second}`;
-            document.getElementById(
-              "date"
-            ).innerHTML = `${dayName}, ${day} ${month} ${year}`;
-            document.getElementById(
-              "weather"
-            ).innerHTML = `Temperature: ${temperature}°C, Humidity: ${humidity}%`;
-          })
+    function updateClock() {
+      document.getElementById("clock").innerHTML = `${hour}:${minute}:${second}`;
+      document.getElementById("date-container").innerHTML = `${day} ${month} ${year}`;
+      document.getElementById("day-name-container").innerHTML = dayName;
+      document.getElementById("temp-container").innerHTML = `Temperature: ${temperature}C`;
+      document.getElementById("humidity-container").innerHTML = `Humidity: ${humidity}%`;
+    }
 
-          .catch((error) => {
-            console.error("Error fetching data:", error);
-          });
-      }
+    function fetchDataFromESP32() {
+      // Make an AJAX request to the ESP32 to fetch sensor data
+      fetch("/get-data") // Replace with the actual URL you use on your ESP32
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("Received JSON data: " + JSON.stringify(data));
+          // Update the HTML elements with the received sensor data
+          day = String(data.day).padStart(2, "0");
+          monthNumber = data.month;
+          month = getMonthName(monthNumber);
+          year = String(data.year).padStart(4, "0");
+          hour = String(data.hour).padStart(2, "0");
+          minute = String(data.minute).padStart(2, "0");
+          second = String(data.second).padStart(2, "0");
+          temperature = data.temperature;
+          humidity = data.humidity;
+          dayName = getDayName(monthNumber, day, year);
 
-      function toggleUpdateMode() {
-        const autoUpdate = document.getElementById("autoUpdate");
-        const manualUpdate = document.getElementById("manualUpdate");
-        const timeInputFields = document.getElementById("timeInputFields");
-        const dateInputFields = document.getElementById("dateInputFields");
-        const updateButton = document.getElementById("updateButton");
-
-        if (autoUpdate.checked) {
-          timeInputFields.style.display = "none";
-          dateInputFields.style.display = "none";
-          updateButton.style.display = "none";
-
-          // Only start the auto-update if it was previously stopped
-          if (!autoUpdateActive) {
-            autoUpdateActive = true;
-            fetchDataFromESP32(); // Initial fetch
-            const autoUpdateInterval = setInterval(fetchDataFromESP32, 500);
-            // Store the interval ID so you can clear it later if needed
-            autoUpdateIntervalId = autoUpdateInterval;
-          }
-        } else {
-          // Stop the auto-update if it's currently running
-          if (autoUpdateActive) {
-            autoUpdateActive = false;
-            clearInterval(autoUpdateIntervalId);
-          }
-
-          timeInputFields.style.display = "block";
-          dateInputFields.style.display = "block";
-          updateButton.style.display = "block";
-        }
-      }
-
-      function manualUpdateClock() {
-        const dayInput = document.getElementById("day");
-        const monthSelect = document.getElementById("month");
-        const yearInput = document.getElementById("year");
-        const dayNameSelect = document.getElementById("dayNameSelect");
-        const hourInput = document.getElementById("hour");
-        const minuteInput = document.getElementById("minute");
-        const secondInput = document.getElementById("second");
-
-        // Update the day, month, year, and dayName variables with user input
-        day = String(dayInput.value).padStart(2, "0") || "01";
-        month = monthSelect.value || "January";
-        year = String(yearInput.value).padStart(4, "0") || "2023";
-        dayName = dayNameSelect.value || "Saturday";
-
-        // Update the hour, minute, and second variables with user input
-        hour = String(hourInput.value).padStart(2, "0") || "01";
-        minute = String(minuteInput.value).padStart(2, "0") || "00";
-        second = String(secondInput.value).padStart(2, "0") || "00";
-
-        // Ensure values are within the valid range
-        hour = hour >= "01" && hour <= "12" ? hour : "01";
-        minute = minute >= "00" && minute <= "59" ? minute : "00";
-        second = second >= "00" && second <= "59" ? second : "00";
-
-        // Wrap around the day input within the range of "01"-"31"
-        day = day >= "01" && day <= "31" ? day : day == "00" ? "31" : "01";
-
-        // Prepare the JSON data to send to the ESP32
-        const data = {
-          hour,
-          minute,
-          second,
-          day,
-          month,
-          year,
-          dayName,
-        };
-        console.log("Received JSON data: " + JSON.stringify(data));
-        // Send the data to the ESP32 using an HTTP POST request
-        fetch("/update-time", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
+          updateClock();
         })
-          .then((response) => response.json())
-          .then((data) => {
-            // Handle the response if needed
-            updateClock();
-          });
-        updateClock();
-      }
-    </script>
-  </head>
 
-  <body onload="updateClock()">
-    <h1>Bangla Clock 2.0</h1>
-    <p id="clock">Loading...</p>
-    <p id="date">Loading...</p>
-    <p id="weather">Loading...</p>
+        .catch((error) => {
+          console.error("Error fetching data:", error);
+        });
+    }
+
+    if(autoMode) fetchDataFromESP32();
+
+    function toggleUpdateMode() {
+      const autoUpdate = document.getElementById("autoUpdate");
+      const manualUpdate = document.getElementById("manualUpdate");
+      const timeInputFields = document.getElementById("timeInputFields");
+      const dateInputFields = document.getElementById("dateInputFields");
+      const updateButton = document.getElementById("updateButton");
+
+      if (autoUpdate.checked) {
+        timeInputFields.style.display = "none";
+        dateInputFields.style.display = "none";
+        updateButton.style.display = "none";
+        autoMode = true;
+      }
+
+      else if (manualUpdate.checked) {
+        // Stop the auto-update if it's currently running
+        autoMode = false;
+        timeInputFields.style.display = "block";
+        dateInputFields.style.display = "block";
+        updateButton.style.display = "block";
+      }
+
+      if (autoMode) {
+        id = setInterval(fetchDataFromESP32, 500); // Initial fetch 
+      }
+      else clearInterval(id);
+    }
+
+
+
+
+    function manualUpdateClock() {
+      const dayInput = document.getElementById("day");
+      const monthSelect = document.getElementById("month");
+      const yearInput = document.getElementById("year");
+      const hourInput = document.getElementById("hour");
+      const minuteInput = document.getElementById("minute");
+      const secondInput = document.getElementById("second");
+
+      // Update the day, month, year, and dayName variables with user input
+      day = String(dayInput.value).padStart(2, "0") || "01";
+      monthNumber = monthSelect.value;
+      month = getMonthName(monthNumber);
+      year = String(yearInput.value).padStart(4, "0") || "2023";
+      // dayName = dayNameSelect.value || "Saturday";
+
+      // Update the hour, minute, and second variables with user input
+      hour = String(hourInput.value).padStart(2, "0") || "01";
+      minute = String(minuteInput.value).padStart(2, "0") || "00";
+      second = String(secondInput.value).padStart(2, "0") || "00";
+
+      // Ensure values are within the valid range
+      hour = hour >= "01" && hour <= "12" ? hour : "01";
+      minute = minute >= "00" && minute <= "59" ? minute : "00";
+      second = second >= "00" && second <= "59" ? second : "00";
+
+      // Wrap around the day input within the range of "01"-"31"
+      day = day >= "01" && day <= "31" ? day : day == "00" ? "31" : "01";
+      dayName = getDayName(month, day, year);
+      // Prepare the JSON data to send to the ESP32
+      
+
+      
+      const data = {
+        hour,
+        minute,
+        day,
+        monthNumber,
+        year,
+        autoUpdateMode,
+      };
+      console.log("Received JSON data: " + JSON.stringify(data));
+      // Send the data to the ESP32 using an HTTP POST request
+      fetch("/update-time", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          // Handle the response if needed
+          updateClock();
+        });
+      updateClock();
+    }
+  </script>
+</head>
+
+<body onload="updateClock()">
+  <h1>Bangla Clock 2.0</h1>
+  <p id="clock">Loading...</p>
+  <p id="date-temp">
+    <span class="first" id="date-container"></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="second"
+      id="temp-container"></span>
+  </p>
+  <p id="dayName-humi">
+    <span class="first" id="day-name-container"></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="second"
+      id="humidity-container"></span>
+  </p>
+
+  <p>
+    Update Mode:
+    <label>
+      <input type="radio" name="updateMode" id="autoUpdate" checked="checked" onchange="toggleUpdateMode()" />
+      Auto
+    </label>
+    <label>
+      <input type="radio" name="updateMode" id="manualUpdate" onchange="toggleUpdateMode()" />
+      Manual
+    </label>
+  </p>
+  <div id="timeInputFields" style="display: none">
     <p>
-      Update Mode:
-      <label>
-        <input
-          type="radio"
-          name="updateMode"
-          id="autoUpdate"
-          checked="checked"
-          onclick="toggleUpdateMode()"
-        />
-        Auto
-      </label>
-      <label>
-        <input
-          type="radio"
-          name="updateMode"
-          id="manualUpdate"
-          onclick="toggleUpdateMode()"
-        />
-        Manual
-      </label>
+      Enter Time:
+      <input type="number" id="hour" placeholder="Hour" min="1" max="12" />
+      <input type="number" id="minute" placeholder="Minute" min="0" max="59" />
+      <input type="number" id="second" placeholder="Second" min="0" max="59" />
     </p>
-    <div id="timeInputFields" style="display: none">
-      <p>
-        Enter Time:
-        <input type="number" id="hour" placeholder="Hour" min="1" max="12" />
-        <input
-          type="number"
-          id="minute"
-          placeholder="Minute"
-          min="0"
-          max="59"
-        />
-        <input
-          type="number"
-          id="second"
-          placeholder="Second"
-          min="0"
-          max="59"
-        />
-      </p>
-    </div>
-    <div id="dateInputFields" style="display: none">
-      <p>
-        Enter Date:
-        <input type="number" id="day" placeholder="Day" min="1" max="31" />
-        <select id="month">
-          <option value="January">January</option>
-          <option value="February">February</option>
-          <option value="March">March</option>
-          <option value="April">April</option>
-          <option value="May">May</option>
-          <option value="June">June</option>
-          <option value="July">July</option>
-          <option value="August">August</option>
-          <option value="September">September</option>
-          <option value="October">October</option>
-          <option value="November">November</option>
-          <option value="December">December</option>
-        </select>
-        <input type="number" id="year" placeholder="Year" min="2020" />
-      </p>
-      <p>
-        Select Day Name:
-        <select id="dayNameSelect">
-          <option value="Saturday">Saturday</option>
-          <option value="Sunday">Sunday</option>
-          <option value="Monday">Monday</option>
-          <option value="Tuesday">Tuesday</option>
-          <option value="Wednesday">Wednesday</option>
-          <option value="Thursday">Thursday</option>
-          <option value="Friday">Friday</option>
-        </select>
-      </p>
-    </div>
+  </div>
+  <div id="dateInputFields" style="display: none">
     <p>
-      <button
-        class="button"
-        id="updateButton"
-        style="display: none"
-        onclick="manualUpdateClock()"
-      >
-        Update
-      </button>
+      Enter Date:
+      <input type="number" id="day" placeholder="Day" min="1" max="31" />
+      <select id="month">
+        <option value="1">January</option>
+        <option value="2">February</option>
+        <option value="3">March</option>
+        <option value="4">April</option>
+        <option value="5">May</option>
+        <option value="6">June</option>
+        <option value="7">July</option>
+        <option value="8">August</option>
+        <option value="9">September</option>
+        <option value="10">October</option>
+        <option value="11">November</option>
+        <option value="12">December</option>
+      </select>
+      <input type="number" id="year" placeholder="Year" min="2020" />
     </p>
-  </body>
+  </div>
+  <div class="container">
+    <button class="button" id="updateButton" style="display: none" onclick="manualUpdateClock()">
+      Update
+    </button>
+  </div>
+</body>
+
 </html>
