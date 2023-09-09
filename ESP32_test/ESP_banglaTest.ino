@@ -14,6 +14,7 @@
 #include <WiFi.h>
 #include "TimeKeeper.h"
 #include <time.h>
+#include <string.h>
 
 struct weatherInfo {
   double temp;
@@ -40,9 +41,9 @@ VGA3Bit vga;
 TimeKeeper time_keeper;
 struct tm dateTime;
 struct weatherInfo wi;
-int timeMode = 1;      //0 for 24hrs system
+int timeMode = 1;  //0 for 24hrs system
 int infoLastUpdated;
-int screenLastUpdated; 
+int screenLastUpdated;
 int deltaTime;
 bool feelEn;
 
@@ -54,14 +55,12 @@ char hum_[15];
 char feel_[10];
 char wday_[10];
 
-void strcpy(char *dest, char *source)
-{
-  while(*source)
-  {
+void strcpy(char *dest, char *source) {
+  while (*source) {
     *dest = *source;
     source++;
     dest++;
-  }  
+  }
 }
 
 void VGA_Setup() {
@@ -76,7 +75,7 @@ void VGA_Setup() {
 void updateTimeOnline() {
 
   /*
-  Serial.printf("Connecting to %s ", ssid);
+  Serial.printf("Connecting to %s ", ssid); 
   infoLastUpdated = 0;
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
@@ -88,18 +87,28 @@ void updateTimeOnline() {
   if (WiFi.status() != WL_CONNECTED) Serial.println("Connection time out");
   else Serial.println("Connected");
 
-  dateTime.tm_year = time_keeper.getYear();
-  dateTime.tm_mon = time_keeper.getMonth();
-  dateTime.tm_mday = time_keeper.getDay();
-  dateTime.tm_wday = time_keeper.getWeekday();
-  dateTime.tm_hour = time_keeper.getHour();
-  dateTime.tm_min = time_keeper.getMin();
+  if (time_keeper.autoUpdateMode == true) {
+    dateTime.tm_year = time_keeper.getYear();
+    dateTime.tm_mon = time_keeper.getMonth();
+    dateTime.tm_mday = time_keeper.getDay();
+    dateTime.tm_wday = time_keeper.getWeekday();
+    dateTime.tm_hour = time_keeper.getHour();
+    dateTime.tm_min = time_keeper.getMin();
 
-  //updating weather
-  wi.temp = time_keeper.getTemp();
-  wi.hum = time_keeper.getHumidity();
-  wi.feel = time_keeper.getFeelslike();
-  delay(3000);
+    //updating weather
+    wi.temp = time_keeper.getTemp();
+    wi.hum = time_keeper.getHumidity();
+    wi.feel = time_keeper.getFeelslike();
+    delay(3000);
+  } 
+  else {
+    dateTime.tm_year = time_keeper.customTime.tm_year;
+    dateTime.tm_mon = time_keeper.customTime.tm_mon;
+    dateTime.tm_mday = time_keeper.customTime.tm_mday;
+    dateTime.tm_wday = 0;
+    dateTime.tm_hour = time_keeper.customTime.tm_hour;
+    dateTime.tm_min = time_keeper.customTime.tm_min;
+  }
   //WiFi.disconnect();
 }
 
@@ -107,37 +116,45 @@ void updateTimeOnline() {
 //updats time using local RTS
 void updateTimeOffline() {
 
-  if(dateTime.tm_min != time_keeper.getMin())
-  {
-    dateTime.tm_min = time_keeper.getMin();
-    vga.clear();
-  }
+  if (time_keeper.autoUpdateMode) {
+    if (dateTime.tm_min != time_keeper.getMin()) {
+      dateTime.tm_min = time_keeper.getMin();
+      vga.clear();
+    }
 
-  dateTime.tm_hour = time_keeper.getHour();
-  dateTime.tm_min = time_keeper.getMin();
+    dateTime.tm_hour = time_keeper.getHour();
+    dateTime.tm_min = time_keeper.getMin();
+  }
+  else
+  {
+    if (dateTime.tm_min != time_keeper.customTime.tm_min) {
+      dateTime.tm_min = time_keeper.customTime.tm_min;
+      vga.clear();
+    }
+
+    dateTime.tm_hour = time_keeper.customTime.tm_hour;
+    dateTime.tm_min = time_keeper.customTime.tm_mon;
+  }
 }
 
 //translates & formats time and weather info for sending to VGA
-void formatTime()
-{
-  if(timeMode == 1)
-  {
+void formatTime() {
+  if (timeMode == 1) {
     dateTime.tm_hour = dateTime.tm_hour % 12;
     dateTime.tm_hour = !dateTime.tm_hour ? 12 : dateTime.tm_hour;
   }
 
   char hr[4];
   char min[4];
-  if(dateTime.tm_hour >= 0 && dateTime.tm_hour < 10)sprintf(hr, "0%d", dateTime.tm_hour);
+  if (dateTime.tm_hour >= 0 && dateTime.tm_hour < 10) sprintf(hr, "0%d", dateTime.tm_hour);
   else sprintf(hr, "%d", dateTime.tm_hour);
-  if(dateTime.tm_min >= 0 && dateTime.tm_min < 10)sprintf(min, "0%d", dateTime.tm_min);
+  if (dateTime.tm_min >= 0 && dateTime.tm_min < 10) sprintf(min, "0%d", dateTime.tm_min);
   else sprintf(min, "%d", dateTime.tm_min);
   sprintf(clock_, "%s { %s", hr, min);
 
   //update date
   char monName[8];
-  switch(dateTime.tm_mon + 1)
-  {
+  switch (dateTime.tm_mon + 1) {
     case 1:
       strcpy(monName, "iQY");
       break;
@@ -151,7 +168,7 @@ void formatTime()
       strcpy(monName, "Wbn");
       break;
     case 5:
-      strcpy(monName, "Vy");
+      strcpy(monName, "V$");
       break;
     case 6:
       strcpy(monName, "AFj");
@@ -178,8 +195,7 @@ void formatTime()
   sprintf(date_, "%d %s %d", dateTime.tm_mday, monName, dateTime.tm_year);
 
   //update week day
-  switch(dateTime.tm_wday)
-  {
+  switch (dateTime.tm_wday) {
     case 0:
       strcpy(monName, "rIBr");
       break;
@@ -206,14 +222,13 @@ void formatTime()
 
 
   //temperature
-  sprintf(temp_, "tpMa{ %.0lf}", wi.temp-273);
+  sprintf(temp_, "tpMa{ %.0lf}", wi.temp);
 
   //humidity
   sprintf(hum_, "Ayt{ %.0lf%%", wi.hum);
 
   //feels like:
   sprintf(feel_, "oZ!T{ %.0lf}", wi.feel - 273);
-
 }
 
 void setup() {
@@ -232,7 +247,7 @@ void setup() {
 }
 
 void loop() {
-  int initTime = millis(); 
+  int initTime = millis();
 
   screenLastUpdated += deltaTime;
   infoLastUpdated += deltaTime;
@@ -240,8 +255,7 @@ void loop() {
   if (infoLastUpdated > 1000 * 3600) updateTimeOnline();
   else updateTimeOffline();
 
-  if(screenLastUpdated > 1000 * 3)
-  {
+  if (screenLastUpdated > 1000 * 3) {
     vga.clear();
     screenLastUpdated = 0;
   }
@@ -282,5 +296,4 @@ void loop() {
 
   //update delta time
   deltaTime = millis() - initTime;
-  
 }

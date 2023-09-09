@@ -86,6 +86,30 @@ int TimeKeeper :: _conv() {
     return banglamonth * 100 + bangladay;
   }
 
+int TimeKeeper::getDayE()
+{
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+    struct tm timeinfo;
+    if (!getLocalTime(&timeinfo)) {
+      Serial.println("Failed to obtain time");
+      return -1;
+    }
+    //Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
+
+    return timeinfo.tm_mday;
+}
+
+int TimeKeeper::getMonthE()
+{
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+    struct tm timeinfo;
+    if (!getLocalTime(&timeinfo)) {
+      Serial.println("Failed to obtain time");
+      return -1;
+    }
+    //Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
+    return timeinfo.tm_mon+1;
+}
 
 double TimeKeeper::getTemp() {
   String serverPath = "http://api.openweathermap.org/data/2.5/weather?q=" + city + "," + country_code + "&APPID=" + openWeatherMapApiKey;
@@ -99,7 +123,7 @@ double TimeKeeper::getTemp() {
   }
   double temp = myObject["main"]["temp"];
   //Serial.println(temp);
-  return temp;
+  return temp-273;
 }
 double TimeKeeper::getHumidity() {
   String serverPath = "http://api.openweathermap.org/data/2.5/weather?q=" + city + "," + country_code + "&APPID=" + openWeatherMapApiKey;

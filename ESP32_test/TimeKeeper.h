@@ -26,7 +26,7 @@ private:
 public:
   String city = "Dhaka";
   String country_code = "BD";
-  bool autoTime;
+  bool autoUpdateMode = true;
   struct tm customTime;
   TimeKeeper();
   double getTemp();
@@ -39,6 +39,11 @@ public:
   int getHour();
   int getMin();
   int getSec();
+
+  int getMonthE();
+  int getDayE();
+
+
 };
 
 #endif

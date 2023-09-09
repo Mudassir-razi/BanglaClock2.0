@@ -16,7 +16,6 @@ const char* passPath = "/pass.txt";
 //const char* ipPath = "/ip.txt";
 //const char* gatewayPath = "/gateway.txt";
 
-
 IPAddress localIP;
 
 // Initialize SPIFFS
@@ -120,8 +119,7 @@ void setupServer() {
 
 
     Server.on("/get-data", HTTP_GET, [](AsyncWebServerRequest * request) {
-      TimeKeeper time;
-      Serial.println("Received Ntp data:");
+      /*Serial.println("Received Ntp data:");
       Serial.println("Hour: " + String(time.getHour()));
       Serial.println("Minute: " + String(time.getMin()));
       Serial.println("Second: " + String(time.getSec()));
@@ -130,17 +128,17 @@ void setupServer() {
       Serial.println("Year: " + String(time.getYear()));
       Serial.println("Temperature: " + String(time.getTemp()));
       Serial.println("Humidity: " + String(time.getHumidity()));
-
+*/
       // Create a JSON response with the sensor data
       StaticJsonDocument<256> jsonResponse;
-      jsonResponse["hour"] = time.getHour();
-      jsonResponse["minute"] = time.getMin();
-      jsonResponse["second"] = time.getSec();
-      jsonResponse["day"] = time.getDay();
-      jsonResponse["month"] = time.getMonth();
-      jsonResponse["year"] = time.getYear();
-      jsonResponse["humidity"] = time.getHumidity();
-      jsonResponse["temperature"] = time.getTemp();
+      jsonResponse["hour"] = time_keeper.getHour();
+      jsonResponse["minute"] = time_keeper.getMin();
+      jsonResponse["second"] = time_keeper.getSec();
+      jsonResponse["day"] = time_keeper.getDayE();
+      jsonResponse["month"] = time_keeper.getMonthE();
+      jsonResponse["year"] = time_keeper.getYear() + 593;
+      jsonResponse["humidity"] = time_keeper.getHumidity();
+      jsonResponse["temperature"] = time_keeper.getTemp();
 
       String jsonData;
       serializeJson(jsonResponse, jsonData);
@@ -157,21 +155,26 @@ void setupServer() {
         DeserializationError error = deserializeJson(doc, (const char*)data);
 
         if (!error) {
+          time_keeper.autoUpdateMode = false;
           const char* hour = doc["hour"];
           const char* minute = doc["minute"];
-          const char* second = doc["second"];
           const char* day = doc["day"];
           const char* month = doc["month"];
           const char* year = doc["year"];
-          const char* dayName = doc["dayName"];
+
+          TimeKeeper time;
+          time_keeper.customTime.tm_hour = atoi(hour);
+          time_keeper.customTime.tm_min = atoi(minute);
+          time_keeper.customTime.tm_mday = atoi(day);
+          time_keeper.customTime.tm_mon = atoi(month);
+          time_keeper.customTime.tm_year = atoi(year);
+          
           Serial.println("Received JSON data:");
           Serial.println("Hour: " + String(hour));
           Serial.println("Minute: " + String(minute));
-          Serial.println("Second: " + String(second));
           Serial.println("Day: " + String(day));
           Serial.println("Month: " + String(month));
           Serial.println("Year: " + String(year));
-          Serial.println("DayName: " + String(dayName));
 
           // Use the received time values (hour, minute, second, day, month, year, dayName) to update your ESP32's clock
           // Implement your code here to handle time updates
@@ -259,7 +262,7 @@ void setupServer() {
         }
       }
       request->send(200, "text/plain", "end");
-      delay(3000);
+      delay(10000);
       ESP.restart();
     });
     Server.begin();
